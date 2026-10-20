@@ -25,10 +25,10 @@
             </div>
             <div class="flex bg-slate-800 p-1 rounded-lg border border-slate-700">
                 <button onclick="switchTab('tech')" id="btn-tech" class="px-4 py-1.5 rounded-md text-sm font-medium transition bg-blue-600 text-white shadow">
-                    <i class="fa-solid fa-mobile-screen-button mr-1.5"></i> Modo Técnico (Celular)
+                    <i class="fa-solid fa-mobile-screen-button mr-1.5"></i> Modo Técnico
                 </button>
-                <button onclick="switchTab('manager')" id="btn-manager" class="px-4 py-1.5 rounded-md text-sm font-medium transition text-slate-300 hover:text-white">
-                    <i class="fa-solid fa-laptop mr-1.5"></i> Painel do Gestor (PC)
+                <button onclick="requestManagerAccess()" id="btn-manager" class="px-4 py-1.5 rounded-md text-sm font-medium transition text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-lock mr-1.5"></i> Painel do Gestor 🔒
                 </button>
             </div>
         </div>
@@ -114,7 +114,7 @@
                 <div class="space-y-2 text-center md:text-left">
                     <span class="bg-blue-500/30 text-blue-200 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">Acesso Rápido para Celulares</span>
                     <h2 class="text-xl font-bold">QR Code de Lançamento para Técnicos</h2>
-                    <p class="text-xs text-slate-300 max-w-xl">Imprima ou exiba este QR Code na oficina/quadro de avisos da fábrica. Os técnicos apontam a câmera do celular e abrem o formulário de medição.</p>
+                    <p class="text-xs text-slate-300 max-w-xl">Imprima ou exiba este QR Code na oficina/quadro de avisos da fábrica. Os técnicos apontam a câmera do celular e abrem o formulário de medição diretamente no smartphone.</p>
                     <div class="flex flex-wrap gap-2 pt-2 justify-center md:justify-start">
                         <input type="text" id="qrUrlInput" value="" class="px-3 py-1.5 bg-slate-800 text-slate-200 border border-slate-700 rounded text-xs w-64 focus:outline-none" placeholder="URL de acesso">
                         <button onclick="generateDynamicQRCode()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded">Atualizar QR Code</button>
@@ -209,6 +209,10 @@
     </main>
 
     <script>
+        // Password for Manager Access (Default: "1234")
+        const MANAGER_PASSWORD = "1234";
+        let isManagerUnlocked = false;
+
         const defaultData = [
             { id: 1, date: "2025-11-02", eq: "Transelevador 1", tech: "Gustavo", in: "0.45", out: "0.45", obs: "Medição inicial" },
             { id: 2, date: "2025-11-02", eq: "Transelevador 2", tech: "Gustavo", in: "0.10", out: "0.25", obs: "Medição inicial" },
@@ -241,6 +245,20 @@
             document.getElementById('qrUrlInput').value = window.location.href;
         });
 
+        function requestManagerAccess() {
+            if (isManagerUnlocked) {
+                switchTab('manager');
+            } else {
+                const pass = prompt("🔐 Acesso Restrito ao Gestor\nPor favor, digite a senha de acesso:");
+                if (pass === MANAGER_PASSWORD) {
+                    isManagerUnlocked = true;
+                    switchTab('manager');
+                } else if (pass !== null) {
+                    alert("❌ Senha incorreta! Acesso negado.");
+                }
+            }
+        }
+
         function switchTab(tab) {
             const btnTech = document.getElementById('btn-tech');
             const btnManager = document.getElementById('btn-manager');
@@ -258,7 +276,6 @@
                 viewManager.classList.remove('hidden');
                 viewTech.classList.add('hidden');
                 
-                // Use setTimeout to ensure container is fully visible before initializing Chart.js and QR Code
                 setTimeout(() => {
                     initManagerDashboard();
                     generateDynamicQRCode();
