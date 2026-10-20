@@ -114,13 +114,13 @@
                 <div class="space-y-2 text-center md:text-left">
                     <span class="bg-blue-500/30 text-blue-200 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">Acesso Rápido para Celulares</span>
                     <h2 class="text-xl font-bold">QR Code de Lançamento para Técnicos</h2>
-                    <p class="text-xs text-slate-300 max-w-xl">Imprima ou exiba este QR Code na oficina/quadro de avisos da fábrica. Os técnicos apontam a câmera do celular e abrem o formulário de medição diretamente no smartphone.</p>
+                    <p class="text-xs text-slate-300 max-w-xl">Imprima ou exiba este QR Code na fábrica. Os técnicos apontam a câmera do celular e abrem o formulário de medição diretamente no smartphone.</p>
                     <div class="flex flex-wrap gap-2 pt-2 justify-center md:justify-start">
-                        <input type="text" id="qrUrlInput" value="" class="px-3 py-1.5 bg-slate-800 text-slate-200 border border-slate-700 rounded text-xs w-64 focus:outline-none" placeholder="URL de acesso">
+                        <input type="text" id="qrUrlInput" value="" class="px-3 py-1.5 bg-slate-800 text-slate-200 border border-slate-700 rounded text-xs w-72 focus:outline-none" placeholder="URL de acesso">
                         <button onclick="generateDynamicQRCode()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded">Atualizar QR Code</button>
                     </div>
                 </div>
-                <div class="bg-white p-3 rounded-lg shadow-inner flex flex-col items-center justify-center min-w-[150px]">
+                <div class="bg-white p-3 rounded-lg shadow-inner flex flex-col items-center justify-center min-w-[140px]">
                     <div id="qrcodeCanvas"></div>
                     <p class="text-[10px] text-slate-500 font-bold mt-2 uppercase">Escanear com Celular</p>
                 </div>
@@ -132,7 +132,7 @@
                     <div>
                         <p class="text-xs font-semibold text-slate-500 uppercase">Frota Monitorada</p>
                         <h3 class="text-2xl font-bold text-slate-900 mt-1">11 Transelevadores</h3>
-                        <p class="text-xs text-blue-600 mt-1"><span id="kpiTotalMeas">0</span> medições cadastradas</p>
+                        <p class="text-xs text-blue-600 mt-1"><span id="kpiTotalMeas">0</span> medições no filtro</p>
                     </div>
                     <div class="bg-blue-50 text-blue-600 p-3 rounded-lg"><i class="fa-solid fa-warehouse text-xl"></i></div>
                 </div>
@@ -162,6 +162,125 @@
                 </div>
             </div>
 
+            <!-- FILTERS PANEL -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-filter text-blue-600"></i> Filtros de Acompanhamento e Busca
+                    </h3>
+                    <button onclick="resetFilters()" class="text-xs text-blue-600 hover:text-blue-800 font-medium">Limpar Filtros</button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-semibold uppercase text-slate-500 mb-1">Filtrar por Ano</label>
+                        <select id="filterYear" onchange="applyFilters()" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500">
+                            <option value="ALL">Todos os Anos (2025 e 2026)</option>
+                            <option value="2026" selected>Ano 2026</option>
+                            <option value="2025">Ano 2025</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold uppercase text-slate-500 mb-1">Filtrar por Equipamento</label>
+                        <select id="filterEq" onchange="applyFilters()" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500">
+                            <option value="ALL">Todos os Transelevadores (1-11)</option>
+                            <option value="Transelevador 1">Transelevador 1</option>
+                            <option value="Transelevador 2">Transelevador 2</option>
+                            <option value="Transelevador 3">Transelevador 3</option>
+                            <option value="Transelevador 4">Transelevador 4</option>
+                            <option value="Transelevador 5">Transelevador 5</option>
+                            <option value="Transelevador 6">Transelevador 6</option>
+                            <option value="Transelevador 7">Transelevador 7</option>
+                            <option value="Transelevador 8">Transelevador 8</option>
+                            <option value="Transelevador 9">Transelevador 9</option>
+                            <option value="Transelevador 10">Transelevador 10</option>
+                            <option value="Transelevador 11">Transelevador 11</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold uppercase text-slate-500 mb-1">Status de Desgaste</label>
+                        <select id="filterStatus" onchange="applyFilters()" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500">
+                            <option value="ALL">Todos os Status</option>
+                            <option value="NORMAL">🟢 Normal (< 1.50mm)</option>
+                            <option value="ALERT">🟡 Alerta (1.50mm - 1.99mm)</option>
+                            <option value="CRITICAL">🔴 Crítico (≥ 2.00mm)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold uppercase text-slate-500 mb-1">Buscar por Técnico / Obs</label>
+                        <input type="text" id="filterSearch" oninput="applyFilters()" placeholder="Ex: Marcos, rolamento, solda..." class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- NEW QUADRANT: CRITICAL / ALERT EQUIPMENT DETAILS -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Identificação dos Equipamentos Críticos e em Alerta
+                        </h3>
+                        <p class="text-xs text-slate-500">Detalhamento por nome dos equipamentos afetados pelo filtro selecionado</p>
+                    </div>
+                    <span id="criticalBadgeCount" class="px-2.5 py-1 bg-rose-100 text-rose-800 text-xs font-bold rounded-full">0 Críticos</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Critical List Box -->
+                    <div class="bg-rose-50/70 border border-rose-200 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-bold text-rose-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle-xmark text-rose-600"></i> Equipamentos Críticos (≥ 2.00 mm)
+                            </h4>
+                            <span id="criticalCountBadge" class="text-xs font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded">0</span>
+                        </div>
+                        <div id="criticalEquipList" class="space-y-2 text-xs text-slate-700 max-h-48 overflow-y-auto pt-1">
+                            <!-- JS populated -->
+                        </div>
+                    </div>
+
+                    <!-- Alert List Box -->
+                    <div class="bg-amber-50/70 border border-amber-200 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-bold text-amber-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-600"></i> Equipamentos em Alerta (1.50mm - 1.99mm)
+                            </h4>
+                            <span id="alertCountBadge" class="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">0</span>
+                        </div>
+                        <div id="alertEquipList" class="space-y-2 text-xs text-slate-700 max-h-48 overflow-y-auto pt-1">
+                            <!-- JS populated -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Special Analysis for TE 3, 7, 8 -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <h3 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-blue-600"></i> Análise de Consumo Específica (Equipamentos 3, 7 e 8)
+                </h3>
+                <p class="text-xs text-slate-500 mb-4">Taxas médias de desgaste mensal calculadas para os equipamentos críticos apontados no histórico mecânico:</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <h4 class="font-bold text-slate-900 text-sm">Transelevador 3</h4>
+                        <p class="text-xs text-slate-600 mt-1">Outbound (Tração): <b>0.336 mm/mês</b></p>
+                        <p class="text-xs text-slate-500">Duração estimada até 1.5mm: ~4.5 meses</p>
+                        <span class="inline-block mt-2 px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-semibold rounded">Desgaste Acelerado</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <h4 class="font-bold text-slate-900 text-sm">Transelevador 7</h4>
+                        <p class="text-xs text-slate-600 mt-1">Outbound (Tração): <b>0.032 mm/mês</b></p>
+                        <p class="text-xs text-slate-500">Duração estimada até 1.5mm: > 36 meses</p>
+                        <span class="inline-block mt-2 px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-semibold rounded">Estável (Após Troca e Alinhamento)</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <h4 class="font-bold text-slate-900 text-sm">Transelevador 8</h4>
+                        <p class="text-xs text-slate-600 mt-1">Outbound (Tração): <b>0.106 mm/mês</b></p>
+                        <p class="text-xs text-slate-500">Duração estimada até 1.5mm: ~14 meses</p>
+                        <span class="inline-block mt-2 px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-semibold rounded">Desgaste Moderado / Padrão</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Charts Row -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
@@ -181,23 +300,24 @@
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="p-5 border-b border-slate-200 flex justify-between items-center">
                     <div>
-                        <h3 class="text-base font-bold text-slate-900">Status Atual da Frota</h3>
-                        <p class="text-xs text-slate-500">Última aferição registrada para cada transelevador</p>
+                        <h3 class="text-base font-bold text-slate-900">Histórico de Medições de Campo (127 Registros)</h3>
+                        <p class="text-xs text-slate-500">Exibindo registros filtrados de 2025 e 2026</p>
                     </div>
                     <button onclick="exportToCSV()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg text-xs font-medium text-slate-700">
                         <i class="fa-solid fa-download mr-1"></i> Baixar CSV / Excel
                     </button>
                 </div>
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto max-h-[500px]">
                     <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-slate-100 text-slate-700 text-xs uppercase font-semibold">
+                        <thead class="sticky top-0 bg-slate-100 shadow-sm">
+                            <tr class="text-slate-700 text-xs uppercase font-semibold">
+                                <th class="p-3">ID</th>
+                                <th class="p-3">Data</th>
                                 <th class="p-3">Equipamento</th>
-                                <th class="p-3">Modelo</th>
-                                <th class="p-3">Última Data</th>
+                                <th class="p-3">Executante</th>
                                 <th class="p-3 text-center">Inbound (Raio)</th>
                                 <th class="p-3 text-center">Outbound (Raio)</th>
-                                <th class="p-3">Recomendação Operacional</th>
+                                <th class="p-3">Observação / Nota</th>
                             </tr>
                         </thead>
                         <tbody id="statusTableBody" class="divide-y divide-slate-200 text-xs"></tbody>
@@ -209,36 +329,12 @@
     </main>
 
     <script>
-        // Password for Manager Access (Default: "1234")
         const MANAGER_PASSWORD = "1234";
         let isManagerUnlocked = false;
 
-        const defaultData = [
-            { id: 1, date: "2025-11-02", eq: "Transelevador 1", tech: "Gustavo", in: "0.45", out: "0.45", obs: "Medição inicial" },
-            { id: 2, date: "2025-11-02", eq: "Transelevador 2", tech: "Gustavo", in: "0.10", out: "0.25", obs: "Medição inicial" },
-            { id: 3, date: "2025-11-02", eq: "Transelevador 3", tech: "Gustavo", in: "0.75", out: "0.35", obs: "Medição inicial" },
-            { id: 4, date: "2025-11-02", eq: "Transelevador 4", tech: "Gustavo", in: "0.80", out: "0.90", obs: "Medição inicial" },
-            { id: 5, date: "2025-11-02", eq: "Transelevador 5", tech: "Gustavo", in: "0.75", out: "1.80", obs: "Medição inicial" },
-            { id: 6, date: "2025-11-02", eq: "Transelevador 6", tech: "Gustavo", in: "0.35", out: "0.85", obs: "Medição inicial" },
-            { id: 7, date: "2025-11-02", eq: "Transelevador 7", tech: "Gustavo", in: "0.60", out: "1.95", obs: "Medição inicial" },
-            { id: 8, date: "2025-11-02", eq: "Transelevador 8", tech: "Gustavo", in: "1.80", out: "1.90", obs: "Medição inicial" },
-            { id: 9, date: "2025-11-02", eq: "Transelevador 9", tech: "Gustavo", in: "0.90", out: "0.10", obs: "Medição inicial" },
-            { id: 10, date: "2025-11-02", eq: "Transelevador 10", tech: "Gustavo", in: "0.65", out: "0.65", obs: "Medição inicial" },
-            { id: 11, date: "2025-11-02", eq: "Transelevador 11", tech: "Gustavo", in: "1.50", out: "1.55", obs: "Medição inicial" },
-            { id: 103, date: "2026-08-04", eq: "Transelevador 1", tech: "Marcos", in: "0.60", out: "1.00", obs: "Bem observado 💿" },
-            { id: 121, date: "2026-10-06", eq: "Transelevador 8", tech: "Vagner", in: "2.70", out: "1.20", obs: "Trocar roda inbound" },
-            { id: 122, date: "2026-10-07", eq: "Transelevador 4", tech: "Marcos", in: "1.15", out: "1.60", obs: "Bem observado 💿" },
-            { id: 123, date: "2026-10-09", eq: "Transelevador 5", tech: "Marcos", in: "1.30", out: "0.70", obs: "Bem observado 💿" },
-            { id: 124, date: "2026-10-15", eq: "Transelevador 3", tech: "Marcos", in: "1.50", out: "1.50", obs: "Desgaste 1.50mm" },
-            { id: 125, date: "2026-10-16", eq: "Transelevador 9", tech: "Vagner", in: "1.65", out: "0.65", obs: "Dentro da especificação" },
-            { id: 120, date: "2026-10-01", eq: "Transelevador 11", tech: "Marcos", in: "Roda Nova", out: "Roda Nova", obs: "Roda nova instalada" },
-            { id: 115, date: "2026-09-11", eq: "Transelevador 7", tech: "Marcos", in: "0.15", out: "0.15", obs: "Bem observado" },
-            { id: 112, date: "2026-09-03", eq: "Transelevador 6", tech: "Marcos", in: "0.50", out: "1.65", obs: "Bem observado 💿" },
-            { id: 111, date: "2026-08-17", eq: "Transelevador 2", tech: "Marcos", in: "0.15", out: "0.55", obs: "Bem observado 💿" },
-            { id: 107, date: "2026-08-10", eq: "Transelevador 10", tech: "Marcos", in: "1.35", out: "1.20", obs: "Bem observado 💿" }
-        ];
+        const excelData = [{"id": 3, "date": "2025-11-02", "eq": "Transelevador 1", "tech": "Gustavo", "in": "0.45", "out": "0.45", "obs": ""}, {"id": 4, "date": "2025-11-02", "eq": "Transelevador 2", "tech": "Gustavo", "in": "0.10", "out": "0.25", "obs": ""}, {"id": 5, "date": "2025-11-02", "eq": "Transelevador 3", "tech": "Gustavo", "in": "0.75", "out": "0.35", "obs": ""}, {"id": 6, "date": "2025-11-02", "eq": "Transelevador 4", "tech": "Gustavo", "in": "0.80", "out": "0.90", "obs": ""}, {"id": 7, "date": "2025-11-02", "eq": "Transelevador 5", "tech": "Gustavo", "in": "0.75", "out": "1.80", "obs": ""}, {"id": 8, "date": "2025-11-02", "eq": "Transelevador 6", "tech": "Gustavo", "in": "0.35", "out": "0.85", "obs": ""}, {"id": 9, "date": "2025-11-02", "eq": "Transelevador 7", "tech": "Gustavo", "in": "0.60", "out": "1.95", "obs": ""}, {"id": 10, "date": "2025-11-02", "eq": "Transelevador 8", "tech": "Gustavo", "in": "1.80", "out": "1.90", "obs": ""}, {"id": 11, "date": "2025-11-02", "eq": "Transelevador 9", "tech": "Gustavo", "in": "0.90", "out": "0.10", "obs": ""}, {"id": 12, "date": "2025-11-02", "eq": "Transelevador 10", "tech": "Gustavo", "in": "0.65", "out": "0.65", "obs": ""}, {"id": 13, "date": "2025-11-02", "eq": "Transelevador 11", "tech": "Gustavo", "in": "1.50", "out": "1.55", "obs": ""}, {"id": 14, "date": "2025-11-07", "eq": "Transelevador 3", "tech": "Marcos Roberto Vieira", "in": "Desgaste 0,75mm no raio.", "out": "Desgaste  0,60mm no raio.", "obs": "Componentes abaixo do limite de desgaste."}, {"id": 15, "date": "2025-11-10", "eq": "Transelevador 8", "tech": "Marcos Roberto Vieira", "in": "Desgaste de 2,10mm no raio.", "out": "Desgaste de  2,05mm no raio.", "obs": "Rodas livres inferiores lado outbound acima do limite de desgaste."}, {"id": 16, "date": "2025-11-11", "eq": "Transelevador 4", "tech": "Marcos Roberto Vieira", "in": "Desgaste 0.85mm no raio", "out": "Desgaste 0.90mm no raio", "obs": "Guia da coluna de Y precisa reparar com solda."}, {"id": 17, "date": "2025-11-12", "eq": "Transelevador 9", "tech": "Edson", "in": "1 mm", "out": "0,25 mm", "obs": ""}, {"id": 18, "date": "2025-11-14", "eq": "Transelevador 2", "tech": "Marcos Roberto Vieira", "in": "Desgaste 0.0mm", "out": "Desgaste 0.35mm", "obs": ""}, {"id": 19, "date": "2025-11-17", "eq": "Transelevador 10", "tech": "Marcos Roberto Vieira", "in": "Desgaste 0.70mm", "out": "Desgaste 0.70mm", "obs": ""}, {"id": 20, "date": "2025-11-18", "eq": "Transelevador 7", "tech": "Marcos v", "in": "desgaste 0,55mm", "out": "Desgaste 2,35mm", "obs": ""}, {"id": 21, "date": "2025-11-21", "eq": "Transelevador 6", "tech": "Rafael/Guilherme", "in": "0,25mm", "out": "1,10mm", "obs": "Rodas livres Outbout inferior trocadas recentemente."}, {"id": 22, "date": "2025-12-01", "eq": "Transelevador 11", "tech": "Marcos Roberto Vieira", "in": "Desgaste de 1.65mm.", "out": "Desgaste de 1.60mm.", "obs": "Cabo de aço da cuna com aparente desgaste, apresenta medição de 16mm de diâmetro. Falta de graxa para o cabo de aço."}, {"id": 23, "date": "2025-12-02", "eq": "Transelevador 1", "tech": "Marcos Roberto Vieira", "in": "Desgaste 0.50mm.", "out": "Desgaste 0.70mm.", "obs": ""}, {"id": 24, "date": "2025-12-03", "eq": "Transelevador 5", "tech": "Guilherme Dias", "in": "Desgaste 0,90mm", "out": "Desgaste 2,00mm", "obs": ""}, {"id": 25, "date": "2025-12-09", "eq": "Transelevador 8", "tech": "Marcos Roberto Vieira", "in": "Desgaste 2.30mm.", "out": "Desgaste 0.15mm.", "obs": "Rodas livres inferiores outbound acima do limite de desgaste, já tem nota aberta."}, {"id": 26, "date": "2025-12-11", "eq": "Transelevador 9", "tech": "Marcos Roberto Vieira", "in": "Desgaste 1,20mm.", "out": "Desgaste 0,15mm.", "obs": ""}, {"id": 27, "date": "2025-12-14", "eq": "Transelevador 4", "tech": "Marcos Roberto Vieira", "in": "Desgaste 0.90mm.", "out": "Desgaste 0.95mm.", "obs": ""}, {"id": 28, "date": "2025-12-15", "eq": "Transelevador 2", "tech": "Guilherme dias", "in": "0,0", "out": "0,35", "obs": ""}, {"id": 29, "date": "2025-12-16", "eq": "Transelevador 10", "tech": "Marcos Roberto Vieira", "in": "Desgaste 0.70mm.", "out": "Desgaste 0.75mm.", "obs": "Rodas guia inferior outbound no limite de desgaste."}, {"id": 30, "date": "2025-12-22", "eq": "Transelevador 7", "tech": "Marcos Roberto Vieira", "in": "Desgaste 0.60mm", "out": "Desgaste 2.55mm", "obs": "Roda de tração lado outbound acima do limite de desgaste."}, {"id": 31, "date": "2025-12-24", "eq": "Transelevador 6", "tech": "Rafael/Guilherme", "in": "0,30mm", "out": "1,05mm", "obs": ""}, {"id": 32, "date": "2026-01-06", "eq": "Transelevador 11", "tech": "Marcos Roberto Vieira", "in": "Desgaste 1.70mm.", "out": "Desgaste 1.60mm.", "obs": ""}, {"id": 33, "date": "2026-01-07", "eq": "Transelevador 1", "tech": "Marcelo", "in": "0.50mm", "out": "0.70mm", "obs": ""}, {"id": 34, "date": "2026-01-09", "eq": "Transelevador 3", "tech": "Marcos Roberto Vieira", "in": "Desgaste 0.85mm.", "out": "Desgaste 1.10mm.", "obs": ""}, {"id": 35, "date": "2026-01-09", "eq": "Transelevador 5", "tech": "Marcos Roberto Vieira", "in": "Desgaste 0.90mm.", "out": "Desgaste 2.25mm.", "obs": ""}, {"id": 36, "date": "2026-01-12", "eq": "Transelevador 8", "tech": "Marcos Roberto Vieira", "in": "Desgaste 2.30mm.", "out": "Desgaste 0.40mm.", "obs": ""}, {"id": 37, "date": "2026-01-13", "eq": "Transelevador 4", "tech": "Guilherme", "in": "Desgaste 0,90mm", "out": "Desgaste 1,00mm", "obs": ""}, {"id": 38, "date": "2026-01-14", "eq": "Transelevador 9", "tech": "Marcos Roberto Vieira", "in": "Desgaste 1.20mm.", "out": "Desgaste 0.20mm.", "obs": ""}, {"id": 39, "date": "2026-01-16", "eq": "Transelevador 2", "tech": "Marcos Roberto Vieira", "in": "Desgaste 0.05mm.", "out": "Desgaste 0.40mm.", "obs": ""}, {"id": 40, "date": "2026-01-19", "eq": "Transelevador 10", "tech": "Marcos Roberto Vieira", "in": "Desgaste 0.80mm.", "out": "Desgaste 0.75mm.", "obs": ""}, {"id": 41, "date": "2026-01-21", "eq": "Transelevador 7", "tech": "Marcos Roberto Vieira", "in": "Desgaste  0.65mm.", "out": "Desgaste 2.70mm.", "obs": "Roda de tração outbound acima do limite de desgaste."}, {"id": 42, "date": "2026-02-02", "eq": "Transelevador 6", "tech": "Marcos Roberto Vieira", "in": "Desgaste 0.35mm.", "out": "Desgaste 1.25mm.", "obs": "Faltam rolamentos das capas dos garfos."}, {"id": 43, "date": "2026-02-03", "eq": "Transelevador 1", "tech": "Marcos Roberto Vieira", "in": "Desgaste 0.50mm.", "out": "Desgaste 0.75mm.", "obs": ""}, {"id": 44, "date": "2026-02-04", "eq": "Transelevador 11", "tech": "Marcos Roberto Vieira", "in": "Desgaste 1.75mm.", "out": "Desgaste 1.70mm.", "obs": ""}, {"id": 45, "date": "2026-02-05", "eq": "Transelevador 5", "tech": "Guilherme dias", "in": "0,90mm", "out": "2,15mm", "obs": ""}, {"id": 46, "date": "2026-02-09", "eq": "Transelevador 3", "tech": "Marcos Roberto Vieira", "in": "Desgaste 0.95mm.", "out": "Desgaste 1.40mm.", "obs": "Roda de tração outbound com desgaste acelerado."}, {"id": 47, "date": "2026-02-11", "eq": "Transelevador 8", "tech": "Marcos Roberto Vieira", "in": "Desgaste 2.40mm.", "out": "Desgaste 0.55mm.", "obs": ""}, {"id": 48, "date": "2026-02-12", "eq": "Transelevador 4", "tech": "Guilherme", "in": "0,90mm", "out": "1,05mm", "obs": ""}, {"id": 49, "date": "2026-02-14", "eq": "Transelevador 7", "tech": "Guilherme", "in": "0,65mm", "out": "2,85mm", "obs": ""}, {"id": 50, "date": "2026-02-16", "eq": "Transelevador 2", "tech": "Marcos Roberto Vieira", "in": "Desgaste 0.05mm.", "out": "Desgaste 0.40mm.", "obs": ""}, {"id": 51, "date": "2026-02-17", "eq": "Transelevador 10", "tech": "Guilherme dias", "in": "0,90mm", "out": "0,80mm", "obs": ""}, {"id": 52, "date": "2026-02-18", "eq": "Transelevador 10", "tech": "Guilherme dis", "in": "1,25mm", "out": "0,30mm", "obs": ""}, {"id": 53, "date": "2026-03-02", "eq": "Transelevador 1", "tech": "Marcos Roberto Vieira", "in": "Desgaste 0.50mm.", "out": "Desgaste 0.75mm.", "obs": ""}, {"id": 54, "date": "2026-03-03", "eq": "Transelevador 11", "tech": "Marcos Roberto Vieira", "in": "Desgaste 1.80mm.", "out": "Desgaste 1.75mm.", "obs": ""}, {"id": 55, "date": "2026-03-04", "eq": "Transelevador 5", "tech": "Marcos Roberto Vieira", "in": "Desgaste 0.95mm.", "out": "Desgaste 2.20mm.", "obs": ""}, {"id": 56, "date": "2026-03-05", "eq": "Transelevador 3", "tech": "Marcelo e Daniel", "in": "1.00", "out": "1.50", "obs": ""}, {"id": 57, "date": "2026-03-10", "eq": "Transelevador 8", "tech": "Marcos Roberto Vieira", "in": "Desgaste 2.45mm.", "out": "Desgaste 0.75mm.", "obs": ""}, {"id": 58, "date": "2026-03-11", "eq": "Transelevador 4", "tech": "Marcelo/daniel", "in": "0,92", "out": "1,06", "obs": ""}, {"id": 59, "date": "2026-03-13", "eq": "Transelevador 7", "tech": "Marcelo Daniel", "in": "0,70mm", "out": "3mm", "obs": ""}, {"id": 60, "date": "2026-03-13", "eq": "Transelevador 2", "tech": "Marcelo/daniel", "in": "0,05", "out": "0,40", "obs": ""}, {"id": 61, "date": "2026-03-16", "eq": "Transelevador 6", "tech": "Marcos Roberto Vieira", "in": "Desgaste 0.35mm.", "out": "Desgaste 1.35mm.", "obs": "Roda Guia Inferior Inbound Sul necessita de troca."}, {"id": 62, "date": "2026-03-17", "eq": "Transelevador 10", "tech": "Marcos Roberto Vieira", "in": "Desgaste 1.00mm.", "out": "Desgaste 0.85mm.", "obs": ""}, {"id": 63, "date": "2026-03-19", "eq": "Transelevador 9", "tech": "Daniel", "in": "1,30mm", "out": "0,35mm", "obs": ""}, {"id": 64, "date": "2026-04-01", "eq": "Transelevador 11", "tech": "Marcos Roberto Vieira", "in": "Desgaste 1.85mm.", "out": "Desgaste 1.85mm.", "obs": "Tem nota aberta referente a solda no trilho inferior."}, {"id": 65, "date": "2026-04-02", "eq": "Transelevador 1", "tech": "Marcos Roberto Vieira", "in": "Desgaste 0.55mm.", "out": "Desgaste 0.70mm.", "obs": ""}, {"id": 66, "date": "2026-04-08", "eq": "Transelevador 9", "tech": "Marcos Roberto Vieira", "in": "Desgaste 1.30mm.", "out": "Desgaste 0.30mm.", "obs": ""}, {"id": 67, "date": "2026-04-09", "eq": "Transelevador 7", "tech": "Jonas", "in": "3 mm de desgaste", "out": "1,5 mm", "obs": "Trilho principal do trans está com muita recarga"}, {"id": 68, "date": "2026-04-13", "eq": "Transelevador 4", "tech": "Marcos Roberto Vieira", "in": "Desgaste 0.95mm.", "out": "Desgaste 1.15mm.", "obs": ""}, {"id": 69, "date": "2026-04-15", "eq": "Transelevador 10", "tech": "Marcos Roberto Vieira", "in": "Desgaste 1.05mm.", "out": "Desgaste 0.95mm.", "obs": ""}, {"id": 70, "date": "2026-04-15", "eq": "Transelevador 5", "tech": "Marcos Roberto Vieira", "in": "Desgaste 1.00mm.", "out": "Desgaste 2.70mm.", "obs": "Roda de tração 0utbound com desgaste acima do limite máximo."}, {"id": 71, "date": "2026-04-16", "eq": "Transelevador 8", "tech": "Marcos Roberto Vieira", "in": "Desgaste 2.55mm.", "out": "Desgaste 0.95mm.", "obs": "Roda de tração inbound desgastada necessário trocar."}, {"id": 72, "date": "2026-04-17", "eq": "Transelevador 3", "tech": "Daniel Gritti Neto", "in": "1.05", "out": "1.85", "obs": "As rodas do setor Outbound estão apresentando um desgaste mais acentuado que o setor Inbound."}, {"id": 73, "date": "2026-04-20", "eq": "Transelevador 6", "tech": "Daniel Gritti Neto", "in": "0,37mm", "out": "1,40mm", "obs": "Medidas referente ao desgaste no diâmetro original das rodas, nos pontos de contato com o trilho inferior"}, {"id": 74, "date": "2026-04-22", "eq": "Transelevador 7", "tech": "Gustavo", "in": "0", "out": "0", "obs": "Par de rodas substituida dia 22/04/2026"}, {"id": 75, "date": "2026-04-23", "eq": "Transelevador 5", "tech": "Gustavo", "in": ".", "out": "0", "obs": "Roda de tração substituida 23/04/2026"}, {"id": 76, "date": "2026-04-24", "eq": "Transelevador 2", "tech": "Jonas e daniel", "in": "0.40", "out": "0.10", "obs": ""}, {"id": 77, "date": "2026-05-05", "eq": "Transelevador 1", "tech": "Daniel Gritti Neto", "in": "0,55 mm", "out": "0,80 mm", "obs": "Medidas referente ao desgaste no diâmetro original das rodas."}, {"id": 78, "date": "2026-05-08", "eq": "Transelevador 3", "tech": "Marcos Vinícius", "in": "1.05 mm", "out": "2.4 mm", "obs": ""}, {"id": 79, "date": "2026-05-12", "eq": "Transelevador 11", "tech": "Vinícius", "in": "1.90", "out": "1.90", "obs": "Observado."}, {"id": 80, "date": "2026-05-27", "eq": "Transelevador 7", "tech": "Marcos Roberto Vieira", "in": "Desgaste 0", "out": "Desgaste 0.05mm.", "obs": ""}, {"id": 81, "date": "2026-05-28", "eq": "Transelevador 2", "tech": "Marcos Vinícius", "in": "0,10", "out": "0,45", "obs": "Está bem observado"}, {"id": 82, "date": "2026-05-26", "eq": "Transelevador 3", "tech": "ADM", "in": ".", "out": ".", "obs": "Roda de tração substituída no dia 26/05/2026"}, {"id": 83, "date": "2026-06-01", "eq": "Transelevador 11", "tech": "Marcos Vinícius", "in": "1.90", "out": "1.90", "obs": "Bem observado"}, {"id": 84, "date": "2026-06-02", "eq": "Transelevador 3", "tech": "Marcos Vinícius", "in": "1.05", "out": "Roda nova", "obs": "Bem observado"}, {"id": 85, "date": "2026-06-03", "eq": "Transelevador 1", "tech": "Marcos Vinícius", "in": "0,55", "out": "0.80", "obs": "Bem observado"}, {"id": 86, "date": "2026-06-04", "eq": "Transelevador 4", "tech": "Marcos Vinícius", "in": "1.00", "out": "1.25", "obs": "Bem observado"}, {"id": 87, "date": "2026-06-09", "eq": "Transelevador 7", "tech": "Marcos Vinícius da Silva", "in": "0,05", "out": "0,05", "obs": "Bem observado"}, {"id": 88, "date": "2026-06-10", "eq": "Transelevador 10", "tech": "Marcos Vinícius da Silva", "in": "1.15", "out": "1.00", "obs": "Bem observado"}, {"id": 89, "date": "2026-06-11", "eq": "Transelevador 5", "tech": "Marcelo e Vagner", "in": "0,95mm", "out": "0,55mm", "obs": ""}, {"id": 90, "date": "2026-06-12", "eq": "Transelevador 9", "tech": "Marcelo", "in": "1,30mm", "out": "0,40mm", "obs": ""}, {"id": 91, "date": "2026-06-15", "eq": "Transelevador 8", "tech": "Marcos Vinícius", "in": "2.60", "out": "1.00", "obs": "Bem observado 💿"}, {"id": 92, "date": "2026-06-16", "eq": "Transelevador 6", "tech": "Marcos Vinícius", "in": "0,50", "out": "1.45", "obs": "Bem observado 💿"}, {"id": 93, "date": "2026-06-16", "eq": "Transelevador 6", "tech": "Marcos Vinícius", "in": "0,50", "out": "1.45", "obs": "Bem observado 💿"}, {"id": 94, "date": "2026-06-17", "eq": "Transelevador 2", "tech": "Vagner", "in": "0.15", "out": "0.50", "obs": "Bem observado 💿"}, {"id": 95, "date": "2026-07-01", "eq": "Transelevador 3", "tech": "Marcos Vinícius", "in": "1.10", "out": "0.25", "obs": "Bem observado 💿"}, {"id": 96, "date": "2026-07-02", "eq": "Transelevador 1", "tech": "Marcos Vinícius", "in": "0.55", "out": "0.90", "obs": "Bem observado 💿"}, {"id": 97, "date": "2026-07-07", "eq": "Transelevador 11", "tech": "Marcos Vinícius", "in": "1.95", "out": "1.90", "obs": "Bem observado"}, {"id": 98, "date": "2026-07-08", "eq": "Transelevador 4", "tech": "Marcos Vinícius", "in": "1.05", "out": "1.25", "obs": "Bem observado 💿"}, {"id": 99, "date": "2026-07-10", "eq": "Transelevador 10", "tech": "Marcos Vinícius", "in": "1.20", "out": "1.05", "obs": "Bem observado 💿"}, {"id": 100, "date": "2026-07-13", "eq": "Transelevador 7", "tech": "Marcos Vinícius", "in": "0.10", "out": "0.10", "obs": "Bem observado 💿"}, {"id": 101, "date": "2026-07-14", "eq": "Transelevador 6", "tech": "Marcos Vinícius", "in": "0.50", "out": "1.50", "obs": "Bem observado 💿"}, {"id": 102, "date": "2026-07-15", "eq": "Transelevador 8", "tech": "Marcos Vinícius", "in": "2.65", "out": "1.05", "obs": "Bem observado 💿"}, {"id": 103, "date": "2026-07-16", "eq": "Transelevador 5", "tech": "Marcos Vinícius", "in": "1.10", "out": "0.40", "obs": "Bem observado 💿"}, {"id": 104, "date": "2026-07-20", "eq": "Transelevador 9", "tech": "Marcos Vinícius", "in": "1.40", "out": "0.40", "obs": "Bem observado"}, {"id": 105, "date": "2026-07-21", "eq": "Transelevador 2", "tech": "Marcos Vinícius", "in": "0.10", "out": "0.50", "obs": "Bem observado 💿"}, {"id": 106, "date": "2026-08-04", "eq": "Transelevador 1", "tech": "Marcos Vinícius da Silva", "in": "0.60", "out": "1.00", "obs": "Bem observado 💿"}, {"id": 107, "date": "2026-08-05", "eq": "Transelevador 3", "tech": "Marcos Vinícius", "in": "1.20", "out": "0.50", "obs": "Bem observado 💿"}, {"id": 108, "date": "2026-08-06", "eq": "Transelevador 11", "tech": "Marcos Vinícius", "in": "1.95", "out": "1.95", "obs": "Bem observado 💿"}, {"id": 109, "date": "2026-08-07", "eq": "Transelevador 4", "tech": "Marcos Vinícius", "in": "1.05", "out": "1.40", "obs": "Bem observado 💿"}, {"id": 110, "date": "2026-08-10", "eq": "Transelevador 10", "tech": "Marcos Vinícius", "in": "1.25", "out": "1.10", "obs": "Bem observado 💿"}, {"id": 111, "date": "2026-08-12", "eq": "Transelevador 6", "tech": "Marcos Vinícius", "in": "0.50", "out": "1.55", "obs": "Bem observado 💿"}, {"id": 112, "date": "2026-08-13", "eq": "Transelevador 8", "tech": "Marcos Vinícius da Silva", "in": "2.65", "out": "1.15", "obs": "Bem observado 💿"}, {"id": 113, "date": "2026-08-14", "eq": "Transelevador 5", "tech": "Marcos Vinícius", "in": "1.15", "out": "0.50", "obs": "Bem observado 💿"}, {"id": 114, "date": "2026-08-17", "eq": "Transelevador 2", "tech": "Marcos Vinícius", "in": "0.15", "out": "0.55", "obs": "Bem observado 💿"}, {"id": 115, "date": "2026-09-03", "eq": "Transelevador 6", "tech": "Marcos Vinícius", "in": "0.5", "out": "1.65", "obs": "Bem observado 💿"}, {"id": 116, "date": "2026-09-08", "eq": "Transelevador 8", "tech": "Marcos Vinícius", "in": "2.70", "out": "1.15", "obs": "Bem observado 💿"}, {"id": 117, "date": "2026-09-10", "eq": "Transelevador 4", "tech": "Marcos Vinícius da Silva", "in": "1.10", "out": "1.50", "obs": "Bem observado 💿"}, {"id": 118, "date": "2026-09-11", "eq": "Transelevador 7", "tech": "Marcos Vinícius", "in": "0.15", "out": "0.15", "obs": "Bem observado"}, {"id": 119, "date": "2026-09-15", "eq": "Transelevador 10", "tech": "Marcos Vinícius", "in": "1.35mm", "out": "1.20mm", "obs": ""}, {"id": 120, "date": "2026-09-14", "eq": "Transelevador 5", "tech": "Marcos Vinícius", "in": "1.20mm", "out": "0.60mm", "obs": ""}, {"id": 121, "date": "2026-09-16", "eq": "Transelevador 3", "tech": "Marcos Vinícius", "in": "1.5", "out": "0.6", "obs": "Bem observado 💿"}, {"id": 122, "date": "2026-09-21", "eq": "Transelevador 2", "tech": "Vagner rodrigo Voltan", "in": "0,15mm", "out": "0,55 mm", "obs": "Já existe cartão aberto"}, {"id": 123, "date": "2026-10-01", "eq": "Transelevador 11", "tech": "Marcos Vinícius da Silva", "in": "Roda nova", "out": "Roda Nova", "obs": "Bem observado 💿"}, {"id": 124, "date": "2026-10-06", "eq": "Transelevador 8", "tech": "Vagner rodrigo Voltan", "in": "2.7 mm", "out": "1.2 mm", "obs": "Medição aferida dia 06/10/2026; trocar roda inbound"}, {"id": 125, "date": "2026-10-07", "eq": "Transelevador 4", "tech": "Marcos Vinicius Da Silva", "in": "1.15", "out": "1.60", "obs": "Bem observado 💿"}, {"id": 126, "date": "2026-10-09", "eq": "Transelevador 5", "tech": "Marcos Vinícius", "in": "1.30", "out": "0.70", "obs": "Bem observado 💿"}, {"id": 127, "date": "2026-10-15", "eq": "Transelevador 3", "tech": "Marcos Roberto Vieira", "in": "Desgaste 1.50mm.", "out": "Desgaste 1.50mm.", "obs": ""}, {"id": 128, "date": "2026-10-16", "eq": "Transelevador 9", "tech": "Vagner rodrigo Voltan", "in": "1,65 mm", "out": "0,65 mm", "obs": "Dentro da especificação"}, {"id": 129, "date": "2026-10-20", "eq": "Transelevador 2", "tech": "Marcos Vinicius Da Silva", "in": "0.15", "out": "0.55", "obs": "Bem observado 💿"}];
 
-        let measurements = JSON.parse(localStorage.getItem('wheel_measurements')) || defaultData;
+        let measurements = JSON.parse(localStorage.getItem('wheel_measurements')) || excelData;
 
         document.addEventListener("DOMContentLoaded", () => {
             document.getElementById('measDate').valueAsDate = new Date();
@@ -348,73 +444,162 @@
         let barChartInstance = null;
         let lineChartInstance = null;
 
+        function applyFilters() {
+            initManagerDashboard();
+        }
+
+        function resetFilters() {
+            document.getElementById('filterYear').value = "ALL";
+            document.getElementById('filterEq').value = "ALL";
+            document.getElementById('filterStatus').value = "ALL";
+            document.getElementById('filterSearch').value = "";
+            initManagerDashboard();
+        }
+
         function initManagerDashboard() {
-            document.getElementById('kpiTotalMeas').innerText = measurements.length;
+            const yearSel = document.getElementById('filterYear').value;
+            const eqSelFilter = document.getElementById('filterEq').value;
+            const statusSel = document.getElementById('filterStatus').value;
+            const searchVal = document.getElementById('filterSearch').value.toLowerCase();
+
+            // First, filter measurements list
+            let filtered = measurements.filter(m => {
+                if (yearSel !== 'ALL' && !m.date.startsWith(yearSel)) return false;
+                if (eqSelFilter !== 'ALL' && m.eq !== eqSelFilter) return false;
+                
+                if (searchVal) {
+                    const text = (m.tech + " " + m.obs + " " + m.eq).toLowerCase();
+                    if (!text.includes(searchVal)) return false;
+                }
+
+                let inV = parseVal(m.in);
+                let outV = parseVal(m.out);
+                let maxV = Math.max(inV !== null ? inV : 0, outV !== null ? outV : 0);
+
+                if (statusSel === 'NORMAL' && maxV >= 1.5) return false;
+                if (statusSel === 'ALERT' && (maxV < 1.5 || maxV >= 2.0)) return false;
+                if (statusSel === 'CRITICAL' && maxV < 2.0) return false;
+
+                return true;
+            });
+
+            document.getElementById('kpiTotalMeas').innerText = filtered.length;
 
             const select = document.getElementById('selectEqHistory');
-            select.innerHTML = '';
-            for (let i = 1; i <= 11; i++) {
-                let opt = document.createElement('option');
-                opt.value = `Transelevador ${i}`;
-                opt.innerText = `Transelevador ${i}`;
-                select.appendChild(opt);
+            if (select.children.length === 0) {
+                for (let i = 1; i <= 11; i++) {
+                    let opt = document.createElement('option');
+                    opt.value = `Transelevador ${i}`;
+                    opt.innerText = `Transelevador ${i}`;
+                    select.appendChild(opt);
+                }
             }
 
-            let eqMap = {};
-            measurements.forEach(m => {
-                if (!eqMap[m.eq] || new Date(m.date) > new Date(eqMap[m.eq].date)) {
-                    eqMap[m.eq] = m;
+            // Get LATEST status per equipment in the active filtered set
+            let latestFilteredMap = {};
+            filtered.forEach(m => {
+                if (!latestFilteredMap[m.eq] || new Date(m.date) > new Date(latestFilteredMap[m.eq].date)) {
+                    latestFilteredMap[m.eq] = m;
                 }
             });
 
-            let normal = 0, alert = 0, critical = 0;
+            let normalFleet = 0, alertFleet = 0, criticalFleet = 0;
+            let criticalListHTML = '';
+            let alertListHTML = '';
+
+            Object.values(latestFilteredMap).sort((a,b) => {
+                let numA = parseInt(a.eq.replace('Transelevador ', ''));
+                let numB = parseInt(b.eq.replace('Transelevador ', ''));
+                return numA - numB;
+            }).forEach(m => {
+                let inVal = parseVal(m.in);
+                let outVal = parseVal(m.out);
+                let maxV = Math.max(inVal !== null ? inVal : 0, outVal !== null ? outVal : 0);
+
+                if (maxV >= 2.0) {
+                    criticalFleet++;
+                    criticalListHTML += `
+                        <div class="bg-white p-2.5 rounded border border-rose-200 shadow-sm flex items-center justify-between">
+                            <div>
+                                <span class="font-bold text-rose-900">${m.eq}</span>
+                                <span class="text-[10px] text-slate-500 block">Data: ${m.date} | Técnico: ${m.tech || 'N/A'}</span>
+                            </div>
+                            <div class="text-right font-mono text-rose-700 font-bold">
+                                In: ${m.in || '-'} | Out: ${m.out || '-'}
+                            </div>
+                        </div>
+                    `;
+                } else if (maxV >= 1.5) {
+                    alertFleet++;
+                    alertListHTML += `
+                        <div class="bg-white p-2.5 rounded border border-amber-200 shadow-sm flex items-center justify-between">
+                            <div>
+                                <span class="font-bold text-amber-900">${m.eq}</span>
+                                <span class="text-[10px] text-slate-500 block">Data: ${m.date} | Técnico: ${m.tech || 'N/A'}</span>
+                            </div>
+                            <div class="text-right font-mono text-amber-700 font-bold">
+                                In: ${m.in || '-'} | Out: ${m.out || '-'}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    normalFleet++;
+                }
+            });
+
+            document.getElementById('kpiNormal').innerText = normalFleet;
+            document.getElementById('kpiAlert').innerText = alertFleet;
+            document.getElementById('kpiCritical').innerText = criticalFleet;
+
+            document.getElementById('criticalBadgeCount').innerText = `${criticalFleet} Crítico(s)`;
+            document.getElementById('criticalCountBadge').innerText = criticalFleet;
+            document.getElementById('alertCountBadge').innerText = alertFleet;
+
+            document.getElementById('criticalEquipList').innerHTML = criticalListHTML || '<div class="text-slate-400 italic text-[11px] p-2">Nenhum equipamento em nível crítico (≥ 2.00 mm) no filtro atual.</div>';
+            document.getElementById('alertEquipList').innerHTML = alertListHTML || '<div class="text-slate-400 italic text-[11px] p-2">Nenhum equipamento em nível de alerta (1.50mm - 1.99mm) no filtro atual.</div>';
+
+            // Populate table rows
             let tableRows = '';
+            filtered.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(m => {
+                let inVal = parseVal(m.in);
+                let outVal = parseVal(m.out);
+
+                tableRows += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 text-slate-500 font-mono">${m.id}</td>
+                        <td class="p-3 text-slate-600 font-medium">${m.date}</td>
+                        <td class="p-3 font-semibold">${m.eq}</td>
+                        <td class="p-3 text-slate-600">${m.tech || '-'}</td>
+                        <td class="p-3 text-center font-mono ${inVal >= 1.5 ? (inVal >= 2.0 ? 'text-rose-600 font-bold' : 'text-amber-600 font-bold') : ''}">${m.in || '-'}</td>
+                        <td class="p-3 text-center font-mono ${outVal >= 1.5 ? (outVal >= 2.0 ? 'text-rose-600 font-bold' : 'text-amber-600 font-bold') : ''}">${m.out || '-'}</td>
+                        <td class="p-3 text-slate-500 text-[11px]">${m.obs || '-'}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('statusTableBody').innerHTML = tableRows || '<tr><td colspan="7" class="p-4 text-center text-slate-400">Nenhum registro encontrado com os filtros selecionados.</td></tr>';
+
+            // Bar Chart based on fleet
             let chartLabels = [];
             let chartIn = [];
             let chartOut = [];
 
+            let latestMap = {};
+            measurements.forEach(m => {
+                if (!latestMap[m.eq] || new Date(m.date) > new Date(latestMap[m.eq].date)) {
+                    latestMap[m.eq] = m;
+                }
+            });
+
             for (let i = 1; i <= 11; i++) {
                 let eqName = `Transelevador ${i}`;
-                let m = eqMap[eqName];
-                let model = i <= 8 ? "Modelo A (TE 1-8)" : "Modelo B (TE 9-11)";
-                let inVal = m ? parseVal(m.in) : null;
-                let outVal = m ? parseVal(m.out) : null;
-                let dateStr = m ? m.date : 'N/A';
-                
+                let m = latestMap[eqName];
+                let inV = m ? parseVal(m.in) : 0;
+                let outV = m ? parseVal(m.out) : 0;
                 chartLabels.push(eqName);
-                chartIn.push(inVal !== null ? inVal : 0);
-                chartOut.push(outVal !== null ? outVal : 0);
-
-                if (inVal !== null) {
-                    if (inVal >= 2.0) critical++;
-                    else if (inVal >= 1.5) alert++;
-                    else normal++;
-                }
-                if (outVal !== null) {
-                    if (outVal >= 2.0) critical++;
-                    else if (outVal >= 1.5) alert++;
-                }
-
-                let rec = "🟢 Operação Normal";
-                if (inVal >= 2.0 || outVal >= 2.0) rec = "🔴 PARADA IMEDIATA PARA TROCA";
-                else if (inVal >= 1.5 || outVal >= 1.5) rec = "🟡 AGENDAR TROCA PREVENTIVA";
-
-                tableRows += `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-3 font-semibold">${eqName}</td>
-                        <td class="p-3 text-slate-500">${model}</td>
-                        <td class="p-3 text-slate-500">${dateStr}</td>
-                        <td class="p-3 text-center font-mono ${inVal >= 1.5 ? 'text-amber-600 font-bold' : ''}">${inVal !== null ? inVal.toFixed(2) : '-'}</td>
-                        <td class="p-3 text-center font-mono ${outVal >= 1.5 ? 'text-amber-600 font-bold' : ''}">${outVal !== null ? outVal.toFixed(2) : '-'}</td>
-                        <td class="p-3 font-medium">${rec}</td>
-                    </tr>
-                `;
+                chartIn.push(inV !== null ? inV : 0);
+                chartOut.push(outV !== null ? outV : 0);
             }
-
-            document.getElementById('kpiNormal').innerText = normal;
-            document.getElementById('kpiAlert').innerText = alert;
-            document.getElementById('kpiCritical').innerText = critical;
-            document.getElementById('statusTableBody').innerHTML = tableRows;
 
             const ctxBar = document.getElementById('barChart').getContext('2d');
             if (barChartInstance) barChartInstance.destroy();
@@ -464,7 +649,7 @@
             let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             let link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = "Acompanhamento_Desgaste_Rodas.csv";
+            link.download = "Acompanhamento_Desgaste_Rodas_Completo.csv";
             link.click();
         }
     </script>
