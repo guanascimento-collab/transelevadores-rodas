@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Desgaste de Rodas - Transelevadores</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-50 font-sans text-slate-800">
+
+    <!-- Navbar -->
+    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-600 p-2 rounded-lg text-white">
+                    <i class="fa-solid fa-gear text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold">Gestão de Desgaste de Rodas</h1>
+                    <p class="text-xs text-slate-400">Controle Preditivo de Transelevadores</p>
+                </div>
+            </div>
+            <div class="flex bg-slate-800 p-1 rounded-lg border border-slate-700">
+                <button onclick="switchTab('tech')" id="btn-tech" class="px-4 py-1.5 rounded-md text-sm font-medium transition bg-blue-600 text-white shadow">
+                    <i class="fa-solid fa-mobile-screen-button mr-1.5"></i> Modo Técnico (Celular)
+                </button>
+                <button onclick="switchTab('manager')" id="btn-manager" class="px-4 py-1.5 rounded-md text-sm font-medium transition text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-laptop mr-1.5"></i> Painel do Gestor (PC)
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6">
+
+        <!-- ==================== TECH VIEW (MOBILE) ==================== -->
+        <section id="view-tech" class="max-w-xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 p-5 sm:p-8">
+            <div class="text-center mb-6">
+                <div class="inline-block bg-blue-50 text-blue-700 p-3 rounded-full mb-2">
+                    <i class="fa-solid fa-clipboard-user text-2xl"></i>
+                </div>
+                <h2 class="text-xl font-bold text-slate-900">Lançamento de Medição Mensal</h2>
+                <p class="text-xs text-slate-500 mt-1">Formulário otimizado para preenchimento rápido via smartphone na planta.</p>
+            </div>
+
+            <form id="measurementForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Data da Medição</label>
+                    <input type="date" id="measDate" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Equipamento</label>
+                    <select id="measEq" onchange="updateModelInfo()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                        <option value="Transelevador 1">Transelevador 1</option>
+                        <option value="Transelevador 2">Transelevador 2</option>
+                        <option value="Transelevador 3">Transelevador 3</option>
+                        <option value="Transelevador 4">Transelevador 4</option>
+                        <option value="Transelevador 5">Transelevador 5</option>
+                        <option value="Transelevador 6">Transelevador 6</option>
+                        <option value="Transelevador 7">Transelevador 7</option>
+                        <option value="Transelevador 8">Transelevador 8</option>
+                        <option value="Transelevador 9">Transelevador 9</option>
+                        <option value="Transelevador 10">Transelevador 10</option>
+                        <option value="Transelevador 11">Transelevador 11</option>
+                    </select>
+                </div>
+
+                <div id="modelBadge" class="bg-blue-50 border border-blue-200 p-3 rounded-lg text-xs text-blue-800">
+                    <i class="fa-solid fa-circle-info mr-1"></i> <span id="modelText">Modelo A (TE 1 a 8): Tração Apenas Outbound (Inbound = Roda Livre)</span>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Nome / Matrícula do Técnico</label>
+                    <input type="text" id="measTech" required placeholder="Ex: Marcos Vinícius" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Tração Inbound (RAIO em mm)</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="measInbound" placeholder="Ex: 0.60" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <button type="button" onclick="setQuickVal('measInbound', 'Roda Nova')" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg text-xs font-medium text-slate-700">Nova</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Tração Outbound (RAIO em mm)</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="measOutbound" placeholder="Ex: 1.00" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <button type="button" onclick="setQuickVal('measOutbound', 'Roda Nova')" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg text-xs font-medium text-slate-700">Nova</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Observações de Campo / Notas</label>
+                    <textarea id="measObs" rows="3" placeholder="Ex: Cartão aberto, barulho anormal..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> Salvar Medição Mensal
+                </button>
+            </form>
+        </section>
+
+        <!-- ==================== MANAGER VIEW (DESKTOP) ==================== -->
+        <section id="view-manager" class="hidden space-y-6">
+            
+            <!-- QR CODE SHARE BANNER -->
+            <div class="bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-xl shadow-md p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="space-y-2 text-center md:text-left">
+                    <span class="bg-blue-500/30 text-blue-200 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">Acesso Rápido para Celulares</span>
+                    <h2 class="text-xl font-bold">QR Code de Lançamento para Técnicos</h2>
+                    <p class="text-xs text-slate-300 max-w-xl">Imprima ou exiba este QR Code na oficina/quadro de avisos da fábrica. Os técnicos apontam a câmera do celular e abrem o formulário de medição.</p>
+                    <div class="flex flex-wrap gap-2 pt-2 justify-center md:justify-start">
+                        <input type="text" id="qrUrlInput" value="" class="px-3 py-1.5 bg-slate-800 text-slate-200 border border-slate-700 rounded text-xs w-64 focus:outline-none" placeholder="URL de acesso">
+                        <button onclick="generateDynamicQRCode()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded">Atualizar QR Code</button>
+                    </div>
+                </div>
+                <div class="bg-white p-3 rounded-lg shadow-inner flex flex-col items-center justify-center min-w-[150px]">
+                    <div id="qrcodeCanvas"></div>
+                    <p class="text-[10px] text-slate-500 font-bold mt-2 uppercase">Escanear com Celular</p>
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Frota Monitorada</p>
+                        <h3 class="text-2xl font-bold text-slate-900 mt-1">11 Transelevadores</h3>
+                        <p class="text-xs text-blue-600 mt-1"><span id="kpiTotalMeas">0</span> medições cadastradas</p>
+                    </div>
+                    <div class="bg-blue-50 text-blue-600 p-3 rounded-lg"><i class="fa-solid fa-warehouse text-xl"></i></div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Operação Normal</p>
+                        <h3 class="text-2xl font-bold text-emerald-600 mt-1" id="kpiNormal">0</h3>
+                        <p class="text-xs text-slate-400 mt-1">Raio < 1.50 mm</p>
+                    </div>
+                    <div class="bg-emerald-50 text-emerald-600 p-3 rounded-lg"><i class="fa-solid fa-circle-check text-xl"></i></div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Em Alerta (Falhas)</p>
+                        <h3 class="text-2xl font-bold text-amber-600 mt-1" id="kpiAlert">0</h3>
+                        <p class="text-xs text-slate-400 mt-1">Raio entre 1.50 e 1.99 mm</p>
+                    </div>
+                    <div class="bg-amber-50 text-amber-600 p-3 rounded-lg"><i class="fa-solid fa-triangle-exclamation text-xl"></i></div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Crítico / Troca Urgente</p>
+                        <h3 class="text-2xl font-bold text-rose-600 mt-1" id="kpiCritical">0</h3>
+                        <p class="text-xs text-slate-400 mt-1">Raio ≥ 2.00 mm</p>
+                    </div>
+                    <div class="bg-rose-50 text-rose-600 p-3 rounded-lg"><i class="fa-solid fa-circle-xmark text-xl"></i></div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                    <h3 class="text-sm font-bold text-slate-900 mb-4">Comparativo de Desgaste Atual por Equipamento (Raio em mm)</h3>
+                    <div class="h-72"><canvas id="barChart"></canvas></div>
+                </div>
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-sm font-bold text-slate-900">Evolução Histórica por Equipamento</h3>
+                        <select id="selectEqHistory" onchange="renderHistoryChart()" class="text-xs border border-slate-300 rounded px-2 py-1 bg-white"></select>
+                    </div>
+                    <div class="h-72"><canvas id="lineChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Status Table -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-slate-200 flex justify-between items-center">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Status Atual da Frota</h3>
+                        <p class="text-xs text-slate-500">Última aferição registrada para cada transelevador</p>
+                    </div>
+                    <button onclick="exportToCSV()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg text-xs font-medium text-slate-700">
+                        <i class="fa-solid fa-download mr-1"></i> Baixar CSV / Excel
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 text-xs uppercase font-semibold">
+                                <th class="p-3">Equipamento</th>
+                                <th class="p-3">Modelo</th>
+                                <th class="p-3">Última Data</th>
+                                <th class="p-3 text-center">Inbound (Raio)</th>
+                                <th class="p-3 text-center">Outbound (Raio)</th>
+                                <th class="p-3">Recomendação Operacional</th>
+                            </tr>
+                        </thead>
+                        <tbody id="statusTableBody" class="divide-y divide-slate-200 text-xs"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        const defaultData = [
+            { id: 1, date: "2025-11-02", eq: "Transelevador 1", tech: "Gustavo", in: "0.45", out: "0.45", obs: "Medição inicial" },
+            { id: 2, date: "2025-11-02", eq: "Transelevador 2", tech: "Gustavo", in: "0.10", out: "0.25", obs: "Medição inicial" },
+            { id: 3, date: "2025-11-02", eq: "Transelevador 3", tech: "Gustavo", in: "0.75", out: "0.35", obs: "Medição inicial" },
+            { id: 4, date: "2025-11-02", eq: "Transelevador 4", tech: "Gustavo", in: "0.80", out: "0.90", obs: "Medição inicial" },
+            { id: 5, date: "2025-11-02", eq: "Transelevador 5", tech: "Gustavo", in: "0.75", out: "1.80", obs: "Medição inicial" },
+            { id: 6, date: "2025-11-02", eq: "Transelevador 6", tech: "Gustavo", in: "0.35", out: "0.85", obs: "Medição inicial" },
+            { id: 7, date: "2025-11-02", eq: "Transelevador 7", tech: "Gustavo", in: "0.60", out: "1.95", obs: "Medição inicial" },
+            { id: 8, date: "2025-11-02", eq: "Transelevador 8", tech: "Gustavo", in: "1.80", out: "1.90", obs: "Medição inicial" },
+            { id: 9, date: "2025-11-02", eq: "Transelevador 9", tech: "Gustavo", in: "0.90", out: "0.10", obs: "Medição inicial" },
+            { id: 10, date: "2025-11-02", eq: "Transelevador 10", tech: "Gustavo", in: "0.65", out: "0.65", obs: "Medição inicial" },
+            { id: 11, date: "2025-11-02", eq: "Transelevador 11", tech: "Gustavo", in: "1.50", out: "1.55", obs: "Medição inicial" },
+            { id: 103, date: "2026-08-04", eq: "Transelevador 1", tech: "Marcos", in: "0.60", out: "1.00", obs: "Bem observado 💿" },
+            { id: 121, date: "2026-10-06", eq: "Transelevador 8", tech: "Vagner", in: "2.70", out: "1.20", obs: "Trocar roda inbound" },
+            { id: 122, date: "2026-10-07", eq: "Transelevador 4", tech: "Marcos", in: "1.15", out: "1.60", obs: "Bem observado 💿" },
+            { id: 123, date: "2026-10-09", eq: "Transelevador 5", tech: "Marcos", in: "1.30", out: "0.70", obs: "Bem observado 💿" },
+            { id: 124, date: "2026-10-15", eq: "Transelevador 3", tech: "Marcos", in: "1.50", out: "1.50", obs: "Desgaste 1.50mm" },
+            { id: 125, date: "2026-10-16", eq: "Transelevador 9", tech: "Vagner", in: "1.65", out: "0.65", obs: "Dentro da especificação" },
+            { id: 120, date: "2026-10-01", eq: "Transelevador 11", tech: "Marcos", in: "Roda Nova", out: "Roda Nova", obs: "Roda nova instalada" },
+            { id: 115, date: "2026-09-11", eq: "Transelevador 7", tech: "Marcos", in: "0.15", out: "0.15", obs: "Bem observado" },
+            { id: 112, date: "2026-09-03", eq: "Transelevador 6", tech: "Marcos", in: "0.50", out: "1.65", obs: "Bem observado 💿" },
+            { id: 111, date: "2026-08-17", eq: "Transelevador 2", tech: "Marcos", in: "0.15", out: "0.55", obs: "Bem observado 💿" },
+            { id: 107, date: "2026-08-10", eq: "Transelevador 10", tech: "Marcos", in: "1.35", out: "1.20", obs: "Bem observado 💿" }
+        ];
+
+        let measurements = JSON.parse(localStorage.getItem('wheel_measurements')) || defaultData;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById('measDate').valueAsDate = new Date();
+            document.getElementById('qrUrlInput').value = window.location.href;
+        });
+
+        function switchTab(tab) {
+            const btnTech = document.getElementById('btn-tech');
+            const btnManager = document.getElementById('btn-manager');
+            const viewTech = document.getElementById('view-tech');
+            const viewManager = document.getElementById('view-manager');
+
+            if (tab === 'tech') {
+                btnTech.className = "px-4 py-1.5 rounded-md text-sm font-medium transition bg-blue-600 text-white shadow";
+                btnManager.className = "px-4 py-1.5 rounded-md text-sm font-medium transition text-slate-300 hover:text-white";
+                viewTech.classList.remove('hidden');
+                viewManager.classList.add('hidden');
+            } else {
+                btnManager.className = "px-4 py-1.5 rounded-md text-sm font-medium transition bg-blue-600 text-white shadow";
+                btnTech.className = "px-4 py-1.5 rounded-md text-sm font-medium transition text-slate-300 hover:text-white";
+                viewManager.classList.remove('hidden');
+                viewTech.classList.add('hidden');
+                
+                // Use setTimeout to ensure container is fully visible before initializing Chart.js and QR Code
+                setTimeout(() => {
+                    initManagerDashboard();
+                    generateDynamicQRCode();
+                }, 50);
+            }
+        }
+
+        function generateDynamicQRCode() {
+            const qrInput = document.getElementById('qrUrlInput').value || window.location.href;
+            const container = document.getElementById('qrcodeCanvas');
+            if (container) {
+                container.innerHTML = '';
+                if (typeof QRCode !== 'undefined') {
+                    new QRCode(container, {
+                        text: qrInput,
+                        width: 110,
+                        height: 110,
+                        colorDark : "#0f172a",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.H
+                    });
+                }
+            }
+        }
+
+        function updateModelInfo() {
+            const eq = document.getElementById('measEq').value;
+            const num = parseInt(eq.replace('Transelevador ', ''));
+            const modelText = document.getElementById('modelText');
+            if (num >= 1 && num <= 8) {
+                modelText.innerText = "Modelo A (TE 1 a 8): Tração Apenas Outbound (Inbound = Roda Livre)";
+            } else {
+                modelText.innerText = "Modelo B (TE 9 a 11): Tração Dupla (Inbound e Outbound Motorizados)";
+            }
+        }
+
+        function setQuickVal(elementId, val) {
+            document.getElementById(elementId).value = val;
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const newEntry = {
+                id: measurements.length + 1,
+                date: document.getElementById('measDate').value,
+                eq: document.getElementById('measEq').value,
+                tech: document.getElementById('measTech').value,
+                in: document.getElementById('measInbound').value,
+                out: document.getElementById('measOutbound').value,
+                obs: document.getElementById('measObs').value
+            };
+
+            measurements.push(newEntry);
+            localStorage.setItem('wheel_measurements', JSON.stringify(measurements));
+            
+            alert('Medição registrada com sucesso!');
+            document.getElementById('measurementForm').reset();
+            document.getElementById('measDate').valueAsDate = new Date();
+            updateModelInfo();
+        }
+
+        function parseVal(v) {
+            if (v === null || v === undefined || v === '') return null;
+            let s = String(v).toLowerCase().replace(',', '.').trim();
+            if (s.includes('nova') || s.includes('novo')) return 0.0;
+            const match = s.match(/[-+]?\d*\.\d+|\d+/);
+            return match ? parseFloat(match[0]) : null;
+        }
+
+        let barChartInstance = null;
+        let lineChartInstance = null;
+
+        function initManagerDashboard() {
+            document.getElementById('kpiTotalMeas').innerText = measurements.length;
+
+            const select = document.getElementById('selectEqHistory');
+            select.innerHTML = '';
+            for (let i = 1; i <= 11; i++) {
+                let opt = document.createElement('option');
+                opt.value = `Transelevador ${i}`;
+                opt.innerText = `Transelevador ${i}`;
+                select.appendChild(opt);
+            }
+
+            let eqMap = {};
+            measurements.forEach(m => {
+                if (!eqMap[m.eq] || new Date(m.date) > new Date(eqMap[m.eq].date)) {
+                    eqMap[m.eq] = m;
+                }
+            });
+
+            let normal = 0, alert = 0, critical = 0;
+            let tableRows = '';
+            let chartLabels = [];
+            let chartIn = [];
+            let chartOut = [];
+
+            for (let i = 1; i <= 11; i++) {
+                let eqName = `Transelevador ${i}`;
+                let m = eqMap[eqName];
+                let model = i <= 8 ? "Modelo A (TE 1-8)" : "Modelo B (TE 9-11)";
+                let inVal = m ? parseVal(m.in) : null;
+                let outVal = m ? parseVal(m.out) : null;
+                let dateStr = m ? m.date : 'N/A';
+                
+                chartLabels.push(eqName);
+                chartIn.push(inVal !== null ? inVal : 0);
+                chartOut.push(outVal !== null ? outVal : 0);
+
+                if (inVal !== null) {
+                    if (inVal >= 2.0) critical++;
+                    else if (inVal >= 1.5) alert++;
+                    else normal++;
+                }
+                if (outVal !== null) {
+                    if (outVal >= 2.0) critical++;
+                    else if (outVal >= 1.5) alert++;
+                }
+
+                let rec = "🟢 Operação Normal";
+                if (inVal >= 2.0 || outVal >= 2.0) rec = "🔴 PARADA IMEDIATA PARA TROCA";
+                else if (inVal >= 1.5 || outVal >= 1.5) rec = "🟡 AGENDAR TROCA PREVENTIVA";
+
+                tableRows += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 font-semibold">${eqName}</td>
+                        <td class="p-3 text-slate-500">${model}</td>
+                        <td class="p-3 text-slate-500">${dateStr}</td>
+                        <td class="p-3 text-center font-mono ${inVal >= 1.5 ? 'text-amber-600 font-bold' : ''}">${inVal !== null ? inVal.toFixed(2) : '-'}</td>
+                        <td class="p-3 text-center font-mono ${outVal >= 1.5 ? 'text-amber-600 font-bold' : ''}">${outVal !== null ? outVal.toFixed(2) : '-'}</td>
+                        <td class="p-3 font-medium">${rec}</td>
+                    </tr>
+                `;
+            }
+
+            document.getElementById('kpiNormal').innerText = normal;
+            document.getElementById('kpiAlert').innerText = alert;
+            document.getElementById('kpiCritical').innerText = critical;
+            document.getElementById('statusTableBody').innerHTML = tableRows;
+
+            const ctxBar = document.getElementById('barChart').getContext('2d');
+            if (barChartInstance) barChartInstance.destroy();
+            barChartInstance = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: chartLabels,
+                    datasets: [
+                        { label: 'Inbound Raio (mm)', data: chartIn, backgroundColor: '#2C5282' },
+                        { label: 'Outbound Raio (mm)', data: chartOut, backgroundColor: '#E53E3E' }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 3.0 } } }
+            });
+
+            renderHistoryChart();
+        }
+
+        function renderHistoryChart() {
+            const eqSel = document.getElementById('selectEqHistory').value;
+            let eqData = measurements.filter(m => m.eq === eqSel).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            let dates = eqData.map(m => m.date);
+            let inVals = eqData.map(m => parseVal(m.in));
+            let outVals = eqData.map(m => parseVal(m.out));
+
+            const ctxLine = document.getElementById('lineChart').getContext('2d');
+            if (lineChartInstance) lineChartInstance.destroy();
+            lineChartInstance = new Chart(ctxLine, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        { label: 'Inbound (Raio mm)', data: inVals, borderColor: '#2C5282', backgroundColor: '#2C5282', tension: 0.1 },
+                        { label: 'Outbound (Raio mm)', data: outVals, borderColor: '#E53E3E', backgroundColor: '#E53E3E', tension: 0.1 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 3.0 } } }
+            });
+        }
+
+        function exportToCSV() {
+            let csv = "ID,Data,Equipamento,Tecnico,Inbound,Outbound,Observacoes\n";
+            measurements.forEach(m => {
+                csv += `${m.id},${m.date},${m.eq},${m.tech},${m.in},${m.out},"${m.obs}"\n`;
+            });
+            let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            let link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "Acompanhamento_Desgaste_Rodas.csv";
+            link.click();
+        }
+    </script>
+</body>
+</html>
