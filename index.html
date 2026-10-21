@@ -334,10 +334,10 @@
             // Escutar alterações na nuvem em tempo real
             db.ref('measurements').on('value', (snapshot) => {
                 const data = snapshot.val();
-                if (data) {
+                if (data && ((Array.isArray(data) && data.length >= excelData.length) || (typeof data === 'object' && Object.keys(data).length >= excelData.length))) {
                     measurements = Array.isArray(data) ? data : Object.values(data);
                 } else {
-                    // Se o banco estiver vazio na 1ª vez, popula com a base inicial do Excel
+                    // Se a nuvem tiver menos dados ou estiver vazia, carrega todos os 127 registros do Excel
                     measurements = excelData;
                     db.ref('measurements').set(excelData);
                 }
