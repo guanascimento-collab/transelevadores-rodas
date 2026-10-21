@@ -305,6 +305,28 @@
             </div>
         </section>
 
+    
+    <!-- Modal de Senha do Gestor -->
+    <div id="passwordModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-sm w-full p-6 text-center space-y-4">
+            <div class="bg-blue-50 text-blue-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-slate-900">Acesso Restrito ao Gestor</h3>
+                <p class="text-xs text-slate-500 mt-1">Digite a senha para visualizar o painel (Padrão: 1234)</p>
+            </div>
+            <div>
+                <input type="password" id="modalPasswordInput" placeholder="Digite a senha..." class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-center font-mono text-base focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <p id="modalErrorMsg" class="text-xs text-rose-600 mt-1 hidden font-semibold">❌ Senha incorreta! Tente novamente.</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="closePasswordModal()" class="w-1/2 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg">Cancelar</button>
+                <button onclick="submitPasswordModal()" class="w-1/2 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Acessar</button>
+            </div>
+        </div>
+    </div>
+
     </main>
 
     <script>
@@ -327,84 +349,150 @@
         }
         const db = firebase.database();
 
-        const FIREBASE_REST_URL = "https://transelevadores-rodas-default-rtdb.firebaseio.com/measurements.json";
-
         document.addEventListener("DOMContentLoaded", () => {
             document.getElementById('measDate').valueAsDate = new Date();
             document.getElementById('qrUrlInput').value = window.location.href;
 
-            // 1. Carrega do localStorage imediatamente para não ficar zerado
+            // 1. Carregar primeiro os dados do Excel/LocalStorage instantaneamente
             const localSaved = localStorage.getItem('wheel_measurements');
             if (localSaved) {
-                try { measurements = JSON.parse(localSaved); } catch(e) { measurements = excelData; }
+                try {
+                    measurements = JSON.parse(localSaved);
+                } catch(e) {
+                    measurements = excelData;
+                }
             } else {
                 measurements = excelData;
                 localStorage.setItem('wheel_measurements', JSON.stringify(excelData));
             }
+
+            // Exibir dados IMEDIATAMENTE na tela (Garante que nunca fique zerado!)
             initManagerDashboard();
 
-            // 2. Busca dados atualizados da Nuvem (Firebase REST)
-            fetchCloudData();
-
-            // Atualiza automaticamente a cada 10 segundos para ver novos dados do celular no PC em tempo real
-            setInterval(fetchCloudData, 10000);
-        });
-
-        function fetchCloudData() {
-            fetch(FIREBASE_REST_URL)
-                .then(res => res.json())
-                .then(data => {
+            // 2. Tentar sincronizar em tempo real via Firebase (se houver conexão/servidor)
+            try {
+                db.ref('measurements').on('value', (snapshot) => {
+                    const data = snapshot.val();
                     if (data && Array.isArray(data) && data.length > 0) {
                         measurements = data;
                         localStorage.setItem('wheel_measurements', JSON.stringify(measurements));
                         initManagerDashboard();
-                        
-                        // Atualiza indicador visual de nuvem conectada
-                        const statusEl = document.getElementById('cloudStatus');
-                        if (statusEl) {
-                            statusEl.className = "hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-950 text-emerald-400 border border-emerald-800";
-                            statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Nuvem Sincronizada';
-                        }
                     } else if (!data) {
-                        // Se estiver vazio na nuvem, envia a base inicial
-                        syncToCloud(excelData, false);
+                        db.ref('measurements').set(measurements);
                     }
-                })
-                .catch(err => {
-                    console.warn("Modo offline / Falha ao buscar nuvem:", err);
+                }, (error) => {
+                    console.warn("Nuvem em modo offline/leitura local:", error);
                 });
+            } catch(err) {
+                console.warn("Erro de conexão com o Firebase:", err);
+            }
+        });
+
+function requestManagerAccess() {
+            if (isManagerUnlocked) {
+                switchTab('manager');
+            } else {
+                const modal = document.getElementById('passwordModal');
+                if (modal) {
+                    modal.classList.remove('hidden');
+                    const input = document.getElementById('modalPasswordInput');
+                    if (input) {
+                        input.value = '';
+                        setTimeout(() => input.focus(), 100);
+                    }
+                    const errorMsg = document.getElementById('modalErrorMsg');
+                    if (errorMsg) errorMsg.classList.add('hidden');
+                }
+            }
         }
 
-        function syncToCloud(dataToSync, showAlert = true) {
-            fetch(FIREBASE_REST_URL, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(dataToSync)
-            })
-            .then(res => {
-                if (res.ok) {
-                    if (showAlert) {
-                        alert('✅ Medição salva e sincronizada na nuvem com sucesso! O computador já pode visualizar.');
-                    }
-                } else {
-                    if (showAlert) {
-                        alert('⚠️ Salvo no dispositivo. Erro ao sincronizar com a nuvem (Verifique sua conexão 4G/Wi-Fi).');
-                    }
+        function closePasswordModal() {
+            const modal = document.getElementById('passwordModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function submitPasswordModal() {
+            const input = document.getElementById('modalPasswordInput');
+            if (input && input.value === MANAGER_PASSWORD) {
+                isManagerUnlocked = true;
+                closePasswordModal();
+                switchTab('manager');
+            } else {
+                const errorMsg = document.getElementById('modalErrorMsg');
+                if (errorMsg) errorMsg.classList.remove('hidden');
+            }
+        }
+
+        // Permite pressionar ENTER no campo de senha
+        document.addEventListener('keydown', (e) => {
+            const modal = document.getElementById('passwordModal');
+            if (e.key === 'Enter' && modal && !modal.classList.contains('hidden')) {
+                submitPasswordModal();
+            }
+        });
+
+        function switchTab(tab) {
+            const btnTech = document.getElementById('btn-tech');
+            const btnManager = document.getElementById('btn-manager');
+            const viewTech = document.getElementById('view-tech');
+            const viewManager = document.getElementById('view-manager');
+
+            if (tab === 'tech') {
+                btnTech.className = "px-4 py-1.5 rounded-md text-sm font-medium transition bg-blue-600 text-white shadow";
+                btnManager.className = "px-4 py-1.5 rounded-md text-sm font-medium transition text-slate-300 hover:text-white";
+                viewTech.classList.remove('hidden');
+                viewManager.classList.add('hidden');
+            } else {
+                btnManager.className = "px-4 py-1.5 rounded-md text-sm font-medium transition bg-blue-600 text-white shadow";
+                btnTech.className = "px-4 py-1.5 rounded-md text-sm font-medium transition text-slate-300 hover:text-white";
+                viewManager.classList.remove('hidden');
+                viewTech.classList.add('hidden');
+                
+                setTimeout(() => {
+                    initManagerDashboard();
+                    generateDynamicQRCode();
+                }, 50);
+            }
+        }
+
+        function generateDynamicQRCode() {
+            const qrInput = document.getElementById('qrUrlInput').value || window.location.href;
+            const container = document.getElementById('qrcodeCanvas');
+            if (container) {
+                container.innerHTML = '';
+                if (typeof QRCode !== 'undefined') {
+                    new QRCode(container, {
+                        text: qrInput,
+                        width: 110,
+                        height: 110,
+                        colorDark : "#0f172a",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.H
+                    });
                 }
-            })
-            .catch(err => {
-                console.error("Erro REST Firebase:", err);
-                if (showAlert) {
-                    alert('⚠️ Salvo localmente no aparelho.');
-                }
-            });
+            }
+        }
+
+        function updateModelInfo() {
+            const eq = document.getElementById('measEq').value;
+            const num = parseInt(eq.replace('Transelevador ', ''));
+            const modelText = document.getElementById('modelText');
+            if (num >= 1 && num <= 8) {
+                modelText.innerText = "Modelo A (TE 1 a 8): Tração Apenas Outbound (Inbound = Roda Livre)";
+            } else {
+                modelText.innerText = "Modelo B (TE 9 a 11): Tração Dupla (Inbound e Outbound Motorizados)";
+            }
+        }
+
+        function setQuickVal(elementId, val) {
+            document.getElementById(elementId).value = val;
         }
 
         function handleFormSubmit(e) {
             e.preventDefault();
             const btn = document.getElementById('btnSaveSubmit');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Enviando para a Nuvem...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Salvando Medição...';
 
             const newEntry = {
                 id: measurements.length + 1,
@@ -418,33 +506,52 @@
 
             measurements.push(newEntry);
 
-            // Salva localmente primeiro
+            // 1. Salvar no armazenamento local do aparelho imediatamente
             localStorage.setItem('wheel_measurements', JSON.stringify(measurements));
-            initManagerDashboard();
 
-            // Envia para a nuvem via API REST (funciona perfeitamente em 4G e computadores)
-            fetch(FIREBASE_REST_URL, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(measurements)
-            })
-            .then(res => {
+            // Função para finalizar com sucesso na tela
+            const finishSuccess = (isCloud) => {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Salvar Medição na Nuvem';
-                if (res.ok) {
-                    alert('✅ Medição enviada para a nuvem com sucesso! Já está visível no computador.');
-                    document.getElementById('measurementForm').reset();
-                    document.getElementById('measDate').valueAsDate = new Date();
-                    updateModelInfo();
-                } else {
-                    alert('⚠️ Medição salva no celular. A sincronização com a nuvem falhou.');
+                alert('✅ Medição salva com sucesso!' + (isCloud ? ' Sincronizada na nuvem!' : ' Guardada no dispositivo (offline).'));
+                document.getElementById('measurementForm').reset();
+                document.getElementById('measDate').valueAsDate = new Date();
+                updateModelInfo();
+                if (typeof initManagerDashboard === 'function') initManagerDashboard();
+            };
+
+            // 2. Tentar enviar para a nuvem com Limite de Tempo (Timeout de 2.5s)
+            let finished = false;
+            const timeoutId = setTimeout(() => {
+                if (!finished) {
+                    finished = true;
+                    finishSuccess(false);
                 }
-            })
-            .catch(err => {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Salvar Medição na Nuvem';
-                alert('⚠️ Medição salva localmente (Modo Offline).');
-            });
+            }, 2500);
+
+            try {
+                db.ref('measurements').set(measurements).then(() => {
+                    if (!finished) {
+                        finished = true;
+                        clearTimeout(timeoutId);
+                        finishSuccess(true);
+                    }
+                }).catch(err => {
+                    console.warn("Erro no Firebase:", err);
+                    if (!finished) {
+                        finished = true;
+                        clearTimeout(timeoutId);
+                        finishSuccess(false);
+                    }
+                });
+            } catch(err) {
+                console.warn("Falha de envio à nuvem:", err);
+                if (!finished) {
+                    finished = true;
+                    clearTimeout(timeoutId);
+                    finishSuccess(false);
+                }
+            }
         }
 
         function parseVal(v) {
