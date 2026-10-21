@@ -441,7 +441,7 @@
             e.preventDefault();
             const btn = document.getElementById('btnSaveSubmit');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Enviando para a Nuvem...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Salvando Medição...';
 
             const newEntry = {
                 id: measurements.length + 1,
@@ -455,21 +455,52 @@
 
             measurements.push(newEntry);
 
-            // Salvar no banco em nuvem Firebase (Sincronização global instantânea)
-            db.ref('measurements').set(measurements).then(() => {
-                localStorage.setItem('wheel_measurements', JSON.stringify(measurements));
-                alert('✅ Medição salva com sucesso na nuvem! O computador do gestor já foi atualizado.');
+            // 1. Salvar no armazenamento local do aparelho imediatamente
+            localStorage.setItem('wheel_measurements', JSON.stringify(measurements));
+
+            // Função para finalizar com sucesso na tela
+            const finishSuccess = (isCloud) => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Salvar Medição na Nuvem';
+                alert('✅ Medição salva com sucesso!' + (isCloud ? ' Sincronizada na nuvem!' : ' Guardada no dispositivo (offline).'));
                 document.getElementById('measurementForm').reset();
                 document.getElementById('measDate').valueAsDate = new Date();
                 updateModelInfo();
-            }).catch(err => {
-                console.error("Erro ao salvar no Firebase:", err);
-                localStorage.setItem('wheel_measurements', JSON.stringify(measurements));
-                alert('⚠️ Salvo localmente! Ocorreu uma falha ao enviar para a nuvem.');
-            }).finally(() => {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Salvar Medição na Nuvem';
-            });
+                if (typeof initManagerDashboard === 'function') initManagerDashboard();
+            };
+
+            // 2. Tentar enviar para a nuvem com Limite de Tempo (Timeout de 2.5s)
+            let finished = false;
+            const timeoutId = setTimeout(() => {
+                if (!finished) {
+                    finished = true;
+                    finishSuccess(false);
+                }
+            }, 2500);
+
+            try {
+                db.ref('measurements').set(measurements).then(() => {
+                    if (!finished) {
+                        finished = true;
+                        clearTimeout(timeoutId);
+                        finishSuccess(true);
+                    }
+                }).catch(err => {
+                    console.warn("Erro no Firebase:", err);
+                    if (!finished) {
+                        finished = true;
+                        clearTimeout(timeoutId);
+                        finishSuccess(false);
+                    }
+                });
+            } catch(err) {
+                console.warn("Falha de envio à nuvem:", err);
+                if (!finished) {
+                    finished = true;
+                    clearTimeout(timeoutId);
+                    finishSuccess(false);
+                }
+            }
         }
 
         function parseVal(v) {
