@@ -331,22 +331,39 @@
             document.getElementById('measDate').valueAsDate = new Date();
             document.getElementById('qrUrlInput').value = window.location.href;
 
-            // Escutar alterações na nuvem em tempo real
-            db.ref('measurements').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data && ((Array.isArray(data) && data.length >= excelData.length) || (typeof data === 'object' && Object.keys(data).length >= excelData.length))) {
-                    measurements = Array.isArray(data) ? data : Object.values(data);
-                } else {
-                    // Se a nuvem tiver menos dados ou estiver vazia, carrega todos os 127 registros do Excel
+            // 1. Carregar primeiro os dados do Excel/LocalStorage instantaneamente
+            const localSaved = localStorage.getItem('wheel_measurements');
+            if (localSaved) {
+                try {
+                    measurements = JSON.parse(localSaved);
+                } catch(e) {
                     measurements = excelData;
-                    db.ref('measurements').set(excelData);
                 }
-                initManagerDashboard();
-            }, (error) => {
-                console.warn("Erro ao conectar à nuvem Firebase, usando cache local:", error);
-                measurements = JSON.parse(localStorage.getItem('wheel_measurements')) || excelData;
-                initManagerDashboard();
-            });
+            } else {
+                measurements = excelData;
+                localStorage.setItem('wheel_measurements', JSON.stringify(excelData));
+            }
+
+            // Exibir dados IMEDIATAMENTE na tela (Garante que nunca fique zerado!)
+            initManagerDashboard();
+
+            // 2. Tentar sincronizar em tempo real via Firebase (se houver conexão/servidor)
+            try {
+                db.ref('measurements').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data && Array.isArray(data) && data.length > 0) {
+                        measurements = data;
+                        localStorage.setItem('wheel_measurements', JSON.stringify(measurements));
+                        initManagerDashboard();
+                    } else if (!data) {
+                        db.ref('measurements').set(measurements);
+                    }
+                }, (error) => {
+                    console.warn("Nuvem em modo offline/leitura local:", error);
+                });
+            } catch(err) {
+                console.warn("Erro de conexão com o Firebase:", err);
+            }
         });
 
         function requestManagerAccess() {
